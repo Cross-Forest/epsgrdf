@@ -35,7 +35,10 @@ public class Main {
             modelInput.read(in, null, "TURTLE");
         }
 
+        System.out.println("Creating Geocentring Positions from Egocentric Positions");
         Model modelTemp = transformEgocentricPositions(modelInput);
+        modelInput.add(modelTemp);
+        System.out.println("Creating WGS84 Positions from Positions in other CRSs");
         modelTemp.add(transformGeocentricPositions(modelInput));
 
         System.out.println("Writing output.ttl");
@@ -67,6 +70,7 @@ public class Main {
         Resource unitMeters = modelTemp.createResource(IRI.UNIT_METERS);
         Resource axis47 = modelTemp.createResource(IRI.AXIS_47);
         Resource axis48 = modelTemp.createResource(IRI.AXIS_48);
+        Property hasPosition = modelInput.getProperty(IRI.HAS_POSITION);
 
         StmtIterator iterPositions = modelInput.listStatements(null, RDF.type, egocentricPosition);
         iterPositions.forEachRemaining(statementIsEgocentricPosition -> {
@@ -75,18 +79,24 @@ public class Main {
             Resource crs = referencePosition.getProperty(hasCRS).getObject().asResource();
             int crsCode = crs.getProperty(hasEPSGcode).getInt();
             double[] referenceCoordinates = new double[2];
+            Literal[] coordinateLiterals = new Literal[2];
             referenceCoordinates[0] = referencePosition.getProperty(hasCoordinate48).getInt();
             referenceCoordinates[1] = referencePosition.getProperty(hasCoordinate47).getInt();
             double direction = oldPosition.getProperty(hasDirectionInGradians).getInt();
             double distance = oldPosition.getProperty(hasDistanceInMeters).getDouble();
-            
+
             double[] newCoordinates = egocentric2geocentric(referenceCoordinates, direction, distance);
+            coordinateLiterals[0] = modelTemp.createTypedLiteral(Double.toString(newCoordinates[0]),
+                    XSDDatatype.XSDdecimal);
+            coordinateLiterals[1] = modelTemp.createTypedLiteral(Double.toString(newCoordinates[1]),
+                    XSDDatatype.XSDdecimal);
+
             Resource coordinate48 = modelTemp.createResource(IRI.IFN_DATA + "coordinate/48-" + newCoordinates[0]);
-            coordinate48.addLiteral(hasValue, newCoordinates[0]);
+            coordinate48.addProperty(hasValue, coordinateLiterals[0]);
             coordinate48.addProperty(hasUnit, unitMeters);
             coordinate48.addProperty(hasAxis, axis48);
             Resource coordinate47 = modelTemp.createResource(IRI.IFN_DATA + "coordinate/47-" + newCoordinates[1]);
-            coordinate47.addLiteral(hasValue, newCoordinates[1]);
+            coordinate47.addProperty(hasValue, coordinateLiterals[1]);
             coordinate47.addProperty(hasUnit, unitMeters);
             coordinate47.addProperty(hasAxis, axis47);
 
@@ -94,9 +104,17 @@ public class Main {
             newPosition.addProperty(hasCRS, crs);
             newPosition.addProperty(hasCoordinate, coordinate48);
             newPosition.addProperty(hasCoordinate, coordinate47);
-            newPosition.addLiteral(hasCoordinate48, newCoordinates[0]);
-            newPosition.addLiteral(hasCoordinate47, newCoordinates[1]);
+            newPosition.addProperty(hasCoordinate48, coordinateLiterals[0]);
+            newPosition.addProperty(hasCoordinate47, coordinateLiterals[1]);
 
+            // Add the position to the spatial entity
+            StmtIterator iterSpatialEntities = modelInput.listStatements(null, hasPosition, oldPosition);
+            iterSpatialEntities.forEachRemaining(statementHasPosition -> {
+                String spatialEntityUri = statementHasPosition.getSubject().getURI();
+                Resource spatialEntity = modelTemp.createResource(spatialEntityUri);
+                spatialEntity.addProperty(hasPosition, newPosition);
+                newPosition.addProperty(hasCRS, crs);
+            });
         });
 
         return modelTemp;
@@ -127,74 +145,75 @@ public class Main {
         Resource axis2 = modelTemp.createResource(IRI.AXIS_2);
 
         StmtIterator iterPositions = modelInput.listStatements(null, hasCRS, (RDFNode) null);
-        System.out.println("Adding triples");
         iterPositions.forEachRemaining(statementHasCRS -> {
-            Resource oldPosition = statementHasCRS.getSubject();
-            Resource newPosition = modelTemp.createResource(oldPosition.getURI() + "-4326");
-            Resource oldCRS = statementHasCRS.getObject().asResource();
-            int oldCRScode = oldCRS.getProperty(hasEPSGcode).getInt();
-            double[] oldCoordinates = new double[2];
-            double[] newCoordinates = new double[2];
-            Literal[] coordinateLiterals = new Literal[2];
+            if (!statementHasCRS.getObject().asResource().equals(crs4326)) {
+                Resource oldPosition = statementHasCRS.getSubject();
+                Resource newPosition = modelTemp.createResource(oldPosition.getURI() + "-4326");
+                Resource oldCRS = statementHasCRS.getObject().asResource();
+                int oldCRScode = oldCRS.getProperty(hasEPSGcode).getInt();
+                double[] oldCoordinates = new double[2];
+                double[] newCoordinates = new double[2];
+                Literal[] coordinateLiterals = new Literal[2];
 
-            StmtIterator iterCoordinates = modelInput.listStatements(oldPosition, hasCoordinate, (RDFNode) null);
-            iterCoordinates.forEachRemaining(statementHasCoordinate -> {
-                Resource oldCoordinate = statementHasCoordinate.getObject().asResource();
-                double oldCoordinateValue = oldCoordinate.getProperty(hasValue).getObject().asLiteral().getDouble();
-                Resource oldAxis = oldCoordinate.getProperty(hasAxis).getObject().asResource();
-                switch (oldAxis.getURI()) {
-                case IRI.AXIS_48:
-                    oldCoordinates[0] = oldCoordinateValue;
-                    break;
-                case IRI.AXIS_47:
-                    oldCoordinates[1] = oldCoordinateValue;
-                    break;
-                default:
-                    System.out.println(oldAxis.getURI());
-                    // todo: throw exception
-                    break;
+                StmtIterator iterCoordinates = modelInput.listStatements(oldPosition, hasCoordinate, (RDFNode) null);
+                iterCoordinates.forEachRemaining(statementHasCoordinate -> {
+                    Resource oldCoordinate = statementHasCoordinate.getObject().asResource();
+                    double oldCoordinateValue = oldCoordinate.getProperty(hasValue).getObject().asLiteral().getDouble();
+                    Resource oldAxis = oldCoordinate.getProperty(hasAxis).getObject().asResource();
+                    switch (oldAxis.getURI()) {
+                    case IRI.AXIS_48:
+                        oldCoordinates[0] = oldCoordinateValue;
+                        break;
+                    case IRI.AXIS_47:
+                        oldCoordinates[1] = oldCoordinateValue;
+                        break;
+                    default:
+                        System.out.println(oldAxis.getURI());
+                        // todo: throw exception
+                        break;
+                    }
+                });
+                CoordinateReferenceSystem sourceCRS, targetCRS;
+                CoordinateOperation operation;
+                DirectPosition ptSrc, ptDst;
+                try {
+                    sourceCRS = CRS.forCode("EPSG:" + oldCRScode);
+                    targetCRS = CRS.forCode("EPSG:4326");
+                    operation = CRS.findOperation(sourceCRS, targetCRS, null);
+                    ptSrc = new DirectPosition2D(oldCoordinates[0], oldCoordinates[1]);
+                    ptDst = operation.getMathTransform().transform(ptSrc, null);
+                    newCoordinates[0] = Math.round(ptDst.getCoordinate()[0] * 1000000) / 1000000.0;
+                    newCoordinates[1] = Math.round(ptDst.getCoordinate()[1] * 1000000) / 1000000.0;
+                    Resource coordinate1 = modelTemp.createResource(IRI.IFN_DATA + "coordinate/1-" + newCoordinates[0]);
+                    Resource coordinate2 = modelTemp.createResource(IRI.IFN_DATA + "coordinate/2-" + newCoordinates[1]);
+                    newPosition.addProperty(hasCoordinate, coordinate1);
+                    newPosition.addProperty(hasCoordinate, coordinate2);
+                    coordinateLiterals[0] = modelTemp.createTypedLiteral(Double.toString(newCoordinates[0]),
+                            XSDDatatype.XSDdecimal);
+                    coordinateLiterals[1] = modelTemp.createTypedLiteral(Double.toString(newCoordinates[1]),
+                            XSDDatatype.XSDdecimal);
+                    newPosition.addProperty(hasCoordinate1, coordinateLiterals[0]);
+                    newPosition.addProperty(hasCoordinate2, coordinateLiterals[1]);
+                    coordinate1.addProperty(hasValue, coordinateLiterals[0]);
+                    coordinate1.addProperty(hasUnit, unitDegrees);
+                    coordinate1.addProperty(hasAxis, axis1);
+                    coordinate2.addProperty(hasValue, coordinateLiterals[1]);
+                    coordinate2.addProperty(hasUnit, unitDegrees);
+                    coordinate2.addProperty(hasAxis, axis2);
+                } catch (FactoryException | MismatchedDimensionException | TransformException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
-            });
-            CoordinateReferenceSystem sourceCRS, targetCRS;
-            CoordinateOperation operation;
-            DirectPosition ptSrc, ptDst;
-            try {
-                sourceCRS = CRS.forCode("EPSG:" + oldCRScode);
-                targetCRS = CRS.forCode("EPSG:4326");
-                operation = CRS.findOperation(sourceCRS, targetCRS, null);
-                ptSrc = new DirectPosition2D(oldCoordinates[0], oldCoordinates[1]);
-                ptDst = operation.getMathTransform().transform(ptSrc, null);
-                newCoordinates[0] = Math.round(ptDst.getCoordinate()[0] * 1000000) / 1000000.0;
-                newCoordinates[1] = Math.round(ptDst.getCoordinate()[1] * 1000000) / 1000000.0;
-                Resource coordinate1 = modelTemp.createResource(IRI.IFN_DATA + "coordinate/1-" + newCoordinates[0]);
-                Resource coordinate2 = modelTemp.createResource(IRI.IFN_DATA + "coordinate/2-" + newCoordinates[1]);
-                newPosition.addProperty(hasCoordinate, coordinate1);
-                newPosition.addProperty(hasCoordinate, coordinate2);
-                coordinateLiterals[0] = modelTemp.createTypedLiteral(Double.toString(newCoordinates[0]),
-                        XSDDatatype.XSDdecimal);
-                coordinateLiterals[1] = modelTemp.createTypedLiteral(Double.toString(newCoordinates[1]),
-                        XSDDatatype.XSDdecimal);
-                newPosition.addProperty(hasCoordinate1, coordinateLiterals[0]);
-                newPosition.addProperty(hasCoordinate2, coordinateLiterals[1]);
-                coordinate1.addProperty(hasValue, coordinateLiterals[0]);
-                coordinate1.addProperty(hasUnit, unitDegrees);
-                coordinate1.addProperty(hasAxis, axis1);
-                coordinate2.addProperty(hasValue, coordinateLiterals[1]);
-                coordinate2.addProperty(hasUnit, unitDegrees);
-                coordinate2.addProperty(hasAxis, axis2);
-            } catch (FactoryException | MismatchedDimensionException | TransformException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
 
-            StmtIterator iterSpatialEntities = modelInput.listStatements(null, hasPosition,
-                    statementHasCRS.getSubject());
-            iterSpatialEntities.forEachRemaining(statementHasPosition -> {
-                String spatialEntityUri = statementHasPosition.getSubject().getURI();
-                Resource spatialEntity = modelTemp.createResource(spatialEntityUri);
-                spatialEntity.addProperty(hasPosition, newPosition);
-                newPosition.addProperty(hasCRS, crs4326);
-            });
+                StmtIterator iterSpatialEntities = modelInput.listStatements(null, hasPosition,
+                        statementHasCRS.getSubject());
+                iterSpatialEntities.forEachRemaining(statementHasPosition -> {
+                    String spatialEntityUri = statementHasPosition.getSubject().getURI();
+                    Resource spatialEntity = modelTemp.createResource(spatialEntityUri);
+                    spatialEntity.addProperty(hasPosition, newPosition);
+                    newPosition.addProperty(hasCRS, crs4326);
+                });
+            }
         });
 
         return modelTemp;
