@@ -15,6 +15,7 @@ public class IRI {
     public static final String PREFIX_PLOT = "plot";
     public static final String PREFIX_POSITION = "position";
     public static final String PREFIX_UNIT = "unit";
+    public static final String PREFIX_GEOSPARQL = "wkt";
 
     public static final String MEASURES_BASE = "http://crossforest.eu/measures/";
     public static final String POSITION_BASE = "http://crossforest.eu/position/";
@@ -29,17 +30,20 @@ public class IRI {
     public static final String CRS_PATH = "crs/";
     public static final String PLOT_PATH = "plot/";
     public static final String POSITION_PATH = "position/";
+    public static final String POINT_PATH = "point/";
 
     public static final String MEASURES_ONTOLOGY = MEASURES_BASE + ONTOLOGY_PATH;
     public static final String POSITION_ONTOLOGY = POSITION_BASE + ONTOLOGY_PATH;
     public static final String EPSG_ONTOLOGY = EPSG_BASE + ONTOLOGY_PATH;
+    public static final String GEOSPARQL_ONTOLOGY = "http://www.opengis.net/ont/geosparql#";
 
     public static final String POSITION_DATA = POSITION_BASE + DATA_PATH;
     public static final String MEASURES_DATA = MEASURES_BASE + DATA_PATH;
     public static final String EPSG_DATA = EPSG_BASE + DATA_PATH;
     public static final String IFN_DATA = IFN_BASE + DATA_PATH;
 
-    public static final String COORDINATE_NAMESPACE = POSITION_DATA + COORDINATE_PATH;
+    public static final String COORDINATE_NAMESPACE = IFN_DATA + COORDINATE_PATH;
+    public static final String POINT_NAMESPACE = IFN_DATA + POINT_PATH;
     public static final String AXIS_DATA_NAMESPACE = EPSG_DATA + AXIS_PATH;
     public static final String AXIS_PROPERTY_NAMESPACE = EPSG_ONTOLOGY + AXIS_PATH;
     public static final String PLOT_NAMESPACE = IFN_DATA + PLOT_PATH;
@@ -61,6 +65,8 @@ public class IRI {
     public static final String HAS_AXIS = EPSG_ONTOLOGY + "hasAxis";
     public static final String HAS_VALUE = MEASURES_ONTOLOGY + "hasValue";
     public static final String HAS_UNIT = MEASURES_ONTOLOGY + "hasUnit";
+    public static final String AS_WKT = GEOSPARQL_ONTOLOGY + "asWKT";
+    public static final String HAS_PERIMETER = POSITION_ONTOLOGY + "hasPerimeter";
 
     public static final String CLASS_EGOCENTRIC_POSITION = POSITION_ONTOLOGY + "EgocentricPosition";
 
@@ -72,10 +78,13 @@ public class IRI {
     public static final String AXIS_47 = AXIS_DATA_NAMESPACE + "47";
     public static final String AXIS_48 = AXIS_DATA_NAMESPACE + "48";
 
+    public static final String WKT_LITERAL = GEOSPARQL_ONTOLOGY + "wktLiteral";
+
     public static void setPrefixes(Model model) {
         model.setNsPrefix(PREFIX_MEASURES_ONTOLOGY, MEASURES_ONTOLOGY);
         model.setNsPrefix(PREFIX_POSITION_ONTOLOGY, POSITION_ONTOLOGY);
         model.setNsPrefix(PREFIX_EPSG_ONTOLOGY, EPSG_ONTOLOGY);
+        model.setNsPrefix(PREFIX_GEOSPARQL, GEOSPARQL_ONTOLOGY);
         model.setNsPrefix(PREFIX_COORDINATE, COORDINATE_NAMESPACE);
         model.setNsPrefix(PREFIX_AXIS_DATA, AXIS_DATA_NAMESPACE);
         model.setNsPrefix(PREFIX_AXIS_PROPERTY, AXIS_PROPERTY_NAMESPACE);

@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.*;
@@ -11,6 +15,9 @@ import org.apache.jena.util.FileManager;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.sis.geometry.DirectPosition2D;
 import org.apache.sis.referencing.CRS;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKTReader;
+import org.locationtech.jts.geom.Geometry;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -24,10 +31,12 @@ public class Main {
     public static void main(String[] args) {
 
         // Read input file
+        String outputName = "output";
         Model modelInput = ModelFactory.createDefaultModel();
         IRI.setPrefixes(modelInput);
         for (String fileName : args) {
             System.out.println("Reading file " + fileName);
+            outputName = outputName + "_" + Paths.get(fileName).getFileName();
             InputStream in = FileManager.get().open(fileName);
             if (in == null) {
                 throw new IllegalArgumentException("File: " + fileName + " not found");
@@ -35,21 +44,84 @@ public class Main {
             modelInput.read(in, null, "TURTLE");
         }
 
+        Model modelTemp = ModelFactory.createDefaultModel();
         System.out.println("Creating Geocentring Positions from Egocentric Positions");
-        Model modelTemp = transformEgocentricPositions(modelInput);
+        modelTemp.add(transformEgocentricPositions(modelInput));
         modelInput.add(modelTemp);
         System.out.println("Creating WGS84 Positions from Positions in other CRSs");
         modelTemp.add(transformGeocentricPositions(modelInput));
+        System.out.println("Transforming WKT to set of triples");
+        modelTemp.add(transformWKT(modelInput));
 
-        System.out.println("Writing output.ttl");
+        System.out.println("Adding prefixes to model");
         IRI.setPrefixes(modelTemp);
         try {
             // modelInput.add(modelTemp);
             // modelInput.write(new FileWriter(new File("output.ttl")), "TURTLE");
-            modelTemp.write(new FileWriter(new File("output.ttl")), "TURTLE");
+            System.out.println("Writing " + outputName);
+            modelTemp.write(new FileWriter(new File(outputName)), "TURTLE");
+            System.out.println(outputName + " is written");
         } catch (IOException e) {
+            System.out.println("Exception while writing " + outputName);
             e.printStackTrace();
         }
+        System.out.println("THE END");
+    }
+
+    static Model transformWKT(Model modelInput) {
+        Model modelTemp = ModelFactory.createDefaultModel();
+        Property asWKT = modelInput.getProperty(IRI.AS_WKT);
+        Property hasCoordinate = modelTemp.createProperty(IRI.HAS_COORDINATE);
+        Property hasPerimeter = modelTemp.createProperty(IRI.HAS_PERIMETER);
+        Property hasValue = modelInput.getProperty(IRI.HAS_VALUE);
+        Property hasUnit = modelInput.getProperty(IRI.HAS_UNIT);
+        Resource unitDegrees = modelTemp.createResource(IRI.UNIT_DEGREES);
+        Property hasAxis = modelInput.getProperty(IRI.HAS_AXIS);
+        Property hasCoordinate1 = modelTemp.createProperty(IRI.HAS_COORDINATE_1);
+        Property hasCoordinate2 = modelTemp.createProperty(IRI.HAS_COORDINATE_2);
+        Resource axis1 = modelTemp.createResource(IRI.AXIS_1);
+        Resource axis2 = modelTemp.createResource(IRI.AXIS_2);
+        StmtIterator iterPositions = modelInput.listStatements(null, asWKT, (RDFNode) null);
+        WKTReader wktReader = new WKTReader();
+        iterPositions.forEachRemaining(statementWKT -> {
+            try {
+                String positionURI = statementWKT.getSubject().getURI();
+                // System.out.println(positionURI);
+                Resource position = modelTemp.createResource(positionURI);
+                List<Resource> points = new LinkedList<>();
+
+                String wktInput = statementWKT.getLiteral().getLexicalForm();
+                Geometry geometry = wktReader.read(wktInput);
+                Arrays.stream(geometry.getCoordinates()).forEach(coordinate -> {
+                    Literal[] coordinateLiterals = new Literal[2];
+                    coordinateLiterals[0] = modelTemp.createTypedLiteral(Double.toString(coordinate.x),
+                            XSDDatatype.XSDdecimal);
+                    coordinateLiterals[1] = modelTemp.createTypedLiteral(Double.toString(coordinate.y),
+                            XSDDatatype.XSDdecimal);
+                    Resource point = modelTemp
+                            .createResource(IRI.POINT_NAMESPACE + "-" + coordinate.x + "-" + coordinate.y);
+                    Resource coordinateX = modelTemp.createResource(IRI.COORDINATE_NAMESPACE + "1-" + coordinate.x);
+                    coordinateX.addProperty(hasValue, coordinateLiterals[0]);
+                    coordinateX.addProperty(hasUnit, unitDegrees);
+                    coordinateX.addProperty(hasAxis, axis1);
+                    Resource coordinateY = modelTemp.createResource(IRI.COORDINATE_NAMESPACE + "2-" + coordinate.y);
+                    coordinateY.addProperty(hasValue, coordinateLiterals[1]);
+                    coordinateY.addProperty(hasUnit, unitDegrees);
+                    coordinateY.addProperty(hasAxis, axis2);
+                    point.addProperty(hasCoordinate1, coordinateLiterals[0]);
+                    point.addProperty(hasCoordinate2, coordinateLiterals[1]);
+                    point.addProperty(hasCoordinate, coordinateX);
+                    point.addProperty(hasCoordinate, coordinateY);
+                    points.add(point);
+                });
+                RDFList rdfPoints = modelTemp.createList(points.iterator());
+                position.addProperty(hasPerimeter, rdfPoints);
+            } catch (ParseException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        });
+        return modelTemp;
     }
 
     static Model transformEgocentricPositions(Model modelInput) {
@@ -91,11 +163,11 @@ public class Main {
             coordinateLiterals[1] = modelTemp.createTypedLiteral(Double.toString(newCoordinates[1]),
                     XSDDatatype.XSDdecimal);
 
-            Resource coordinate48 = modelTemp.createResource(IRI.IFN_DATA + "coordinate/48-" + newCoordinates[0]);
+            Resource coordinate48 = modelTemp.createResource(IRI.COORDINATE_NAMESPACE + "48-" + newCoordinates[0]);
             coordinate48.addProperty(hasValue, coordinateLiterals[0]);
             coordinate48.addProperty(hasUnit, unitMeters);
             coordinate48.addProperty(hasAxis, axis48);
-            Resource coordinate47 = modelTemp.createResource(IRI.IFN_DATA + "coordinate/47-" + newCoordinates[1]);
+            Resource coordinate47 = modelTemp.createResource(IRI.COORDINATE_NAMESPACE + "47-" + newCoordinates[1]);
             coordinate47.addProperty(hasValue, coordinateLiterals[1]);
             coordinate47.addProperty(hasUnit, unitMeters);
             coordinate47.addProperty(hasAxis, axis47);
@@ -122,9 +194,9 @@ public class Main {
 
     static double[] egocentric2geocentric(double[] reference, double direction, double distance) {
         double[] newCoordinates = new double[2];
-        double radians = Math.PI / 2 - direction * Math.PI / 200;
-        newCoordinates[0] = Math.floor(reference[0] + distance * Math.sin(radians));
-        newCoordinates[1] = Math.floor(reference[1] + distance * Math.cos(radians));
+        double radians = Math.PI / 2.0 - direction * Math.PI / 200.0;
+        newCoordinates[0] = Math.round((reference[0] + distance * Math.cos(radians)) * 100.0) / 100.0;
+        newCoordinates[1] = Math.round((reference[1] + distance * Math.sin(radians)) * 100.0) / 100.0;
         return newCoordinates;
     }
 
