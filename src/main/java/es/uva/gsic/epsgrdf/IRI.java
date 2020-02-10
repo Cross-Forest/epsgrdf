@@ -48,7 +48,7 @@ public class IRI {
     public static final String AXIS_PROPERTY_NAMESPACE = EPSG_ONTOLOGY + AXIS_PATH;
     public static final String PLOT_NAMESPACE = IFN_DATA + PLOT_PATH;
     public static final String POSITION_NAMESPACE = IFN_DATA + POSITION_PATH;
-    public static final String CRS_NAMESPACE = EPSG_DATA + AXIS_PATH;
+    public static final String CRS_NAMESPACE = EPSG_DATA + CRS_PATH;
     public static final String UNIT_NAMESPACE = MEASURES_ONTOLOGY + UNIT_PATH;
 
     public static final String HAS_EPSG_CODE = EPSG_ONTOLOGY + "hasEPSGcode";
