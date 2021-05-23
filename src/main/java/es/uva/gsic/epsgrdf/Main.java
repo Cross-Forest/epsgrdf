@@ -43,6 +43,7 @@ public class Main {
             }
             modelInput.read(in, null, "TURTLE");
         }
+        outputName = "wgs84.ttl";
 
         Model modelTemp = ModelFactory.createDefaultModel();
         System.out.println("Creating Geocentring Positions from Egocentric Positions");
