@@ -20,7 +20,8 @@ public class IRI {
     public static final String MEASURES_BASE = "http://crossforest.eu/measures/";
     public static final String POSITION_BASE = "http://crossforest.eu/position/";
     public static final String EPSG_BASE = "http://epsg.w3id.org/";
-    public static final String IFN_BASE = "http://crossforest.eu/ifn/";
+    //public static final String IFN_BASE = "http://crossforest.eu/ifn/";
+    public static final String IFN_BASE = "https://datos.iepnb.es/recurso/sector-publico/medio-ambiente/ifn/";
 
     public static final String ONTOLOGY_PATH = "ontology/";
     public static final String DATA_PATH = "data/";
@@ -40,7 +41,8 @@ public class IRI {
     public static final String POSITION_DATA = POSITION_BASE + DATA_PATH;
     public static final String MEASURES_DATA = MEASURES_BASE + DATA_PATH;
     public static final String EPSG_DATA = EPSG_BASE + DATA_PATH;
-    public static final String IFN_DATA = IFN_BASE + DATA_PATH;
+    //public static final String IFN_DATA = IFN_BASE + DATA_PATH;
+    public static final String IFN_DATA = IFN_BASE;
 
     public static final String COORDINATE_NAMESPACE = IFN_DATA + COORDINATE_PATH;
     public static final String POINT_NAMESPACE = IFN_DATA + POINT_PATH;
