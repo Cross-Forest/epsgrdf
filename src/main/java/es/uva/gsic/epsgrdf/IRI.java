@@ -58,10 +58,10 @@ public class IRI {
     public static final String HAS_POSITION = POSITION_ONTOLOGY + "hasPosition";
     public static final String HAS_REFERENCE = POSITION_ONTOLOGY + "hasReference";
     public static final String HAS_COORDINATE = POSITION_ONTOLOGY + "hasCoordinate";
-    public static final String HAS_COORDINATE_1 = AXIS_PROPERTY_NAMESPACE + "1";
+    public static final String HAS_COORDINATE_106 = AXIS_PROPERTY_NAMESPACE + "106";
+    public static final String HAS_COORDINATE_107 = AXIS_PROPERTY_NAMESPACE + "107";
     public static final String HAS_COORDINATE_2 = AXIS_PROPERTY_NAMESPACE + "2";
-    public static final String HAS_COORDINATE_47 = AXIS_PROPERTY_NAMESPACE + "47";
-    public static final String HAS_COORDINATE_48 = AXIS_PROPERTY_NAMESPACE + "48";
+    public static final String HAS_COORDINATE_1 = AXIS_PROPERTY_NAMESPACE + "1";
     public static final String HAS_DIRECTION_IN_GRADIANS = POSITION_ONTOLOGY + "hasDirectionInGradians";
     public static final String HAS_DISTANCE_IN_METERS = POSITION_ONTOLOGY + "hasDistanceInMeters";
     public static final String HAS_AXIS = EPSG_ONTOLOGY + "hasAxis";
@@ -75,10 +75,10 @@ public class IRI {
     public static final String UNIT_DEGREES = UNIT_NAMESPACE + "Degrees";
     public static final String UNIT_METERS = UNIT_NAMESPACE + "Meters";
     public static final String CRS_4326 = CRS_NAMESPACE + "4326";
-    public static final String AXIS_1 = AXIS_DATA_NAMESPACE + "1";
+    public static final String AXIS_106 = AXIS_DATA_NAMESPACE + "106";
+    public static final String AXIS_107 = AXIS_DATA_NAMESPACE + "107";
     public static final String AXIS_2 = AXIS_DATA_NAMESPACE + "2";
-    public static final String AXIS_47 = AXIS_DATA_NAMESPACE + "47";
-    public static final String AXIS_48 = AXIS_DATA_NAMESPACE + "48";
+    public static final String AXIS_1 = AXIS_DATA_NAMESPACE + "1";
 
     public static final String WKT_LITERAL = GEOSPARQL_ONTOLOGY + "wktLiteral";
 

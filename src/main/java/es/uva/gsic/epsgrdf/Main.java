@@ -78,10 +78,10 @@ public class Main {
         Property hasUnit = modelInput.getProperty(IRI.HAS_UNIT);
         Resource unitDegrees = modelTemp.createResource(IRI.UNIT_DEGREES);
         Property hasAxis = modelInput.getProperty(IRI.HAS_AXIS);
-        Property hasCoordinate1 = modelTemp.createProperty(IRI.HAS_COORDINATE_1);
-        Property hasCoordinate2 = modelTemp.createProperty(IRI.HAS_COORDINATE_2);
-        Resource axis1 = modelTemp.createResource(IRI.AXIS_1);
-        Resource axis2 = modelTemp.createResource(IRI.AXIS_2);
+        Property hasCoordinate106 = modelTemp.createProperty(IRI.HAS_COORDINATE_106);
+        Property hasCoordinate107 = modelTemp.createProperty(IRI.HAS_COORDINATE_107);
+        Resource axis106 = modelTemp.createResource(IRI.AXIS_106);
+        Resource axis107 = modelTemp.createResource(IRI.AXIS_107);
         StmtIterator iterPositions = modelInput.listStatements(null, asWKT, (RDFNode) null);
         WKTReader wktReader = new WKTReader();
         iterPositions.forEachRemaining(statementWKT -> {
@@ -101,16 +101,16 @@ public class Main {
                             XSDDatatype.XSDdecimal);
                     Resource point = modelTemp
                             .createResource(IRI.POINT_NAMESPACE + "-" + coordinate.x + "-" + coordinate.y);
-                    Resource coordinateX = modelTemp.createResource(IRI.COORDINATE_NAMESPACE + "1-" + coordinate.x);
+                    Resource coordinateX = modelTemp.createResource(IRI.COORDINATE_NAMESPACE + "106-" + coordinate.x);
                     coordinateX.addProperty(hasValue, coordinateLiterals[0]);
                     coordinateX.addProperty(hasUnit, unitDegrees);
-                    coordinateX.addProperty(hasAxis, axis1);
-                    Resource coordinateY = modelTemp.createResource(IRI.COORDINATE_NAMESPACE + "2-" + coordinate.y);
+                    coordinateX.addProperty(hasAxis, axis106);
+                    Resource coordinateY = modelTemp.createResource(IRI.COORDINATE_NAMESPACE + "107-" + coordinate.y);
                     coordinateY.addProperty(hasValue, coordinateLiterals[1]);
                     coordinateY.addProperty(hasUnit, unitDegrees);
-                    coordinateY.addProperty(hasAxis, axis2);
-                    point.addProperty(hasCoordinate1, coordinateLiterals[0]);
-                    point.addProperty(hasCoordinate2, coordinateLiterals[1]);
+                    coordinateY.addProperty(hasAxis, axis107);
+                    point.addProperty(hasCoordinate106, coordinateLiterals[0]);
+                    point.addProperty(hasCoordinate107, coordinateLiterals[1]);
                     point.addProperty(hasCoordinate, coordinateX);
                     point.addProperty(hasCoordinate, coordinateY);
                     points.add(point);
@@ -133,16 +133,16 @@ public class Main {
         Property hasCRS = modelInput.getProperty(IRI.HAS_CRS);
         Property hasEPSGcode = modelInput.getProperty(IRI.HAS_EPSG_CODE);
         Property hasCoordinate = modelTemp.createProperty(IRI.HAS_COORDINATE);
-        Property hasCoordinate47 = modelInput.getProperty(IRI.HAS_COORDINATE_47);
-        Property hasCoordinate48 = modelInput.getProperty(IRI.HAS_COORDINATE_48);
+        Property hasCoordinate2 = modelInput.getProperty(IRI.HAS_COORDINATE_2);
+        Property hasCoordinate1 = modelInput.getProperty(IRI.HAS_COORDINATE_1);
         Property hasDirectionInGradians = modelInput.getProperty(IRI.HAS_DIRECTION_IN_GRADIANS);
         Property hasDistanceInMeters = modelInput.getProperty(IRI.HAS_DISTANCE_IN_METERS);
         Property hasValue = modelInput.getProperty(IRI.HAS_VALUE);
         Property hasUnit = modelInput.getProperty(IRI.HAS_UNIT);
         Property hasAxis = modelInput.getProperty(IRI.HAS_AXIS);
         Resource unitMeters = modelTemp.createResource(IRI.UNIT_METERS);
-        Resource axis47 = modelTemp.createResource(IRI.AXIS_47);
-        Resource axis48 = modelTemp.createResource(IRI.AXIS_48);
+        Resource axis2 = modelTemp.createResource(IRI.AXIS_2);
+        Resource axis1 = modelTemp.createResource(IRI.AXIS_1);
         Property hasPosition = modelInput.getProperty(IRI.HAS_POSITION);
 
         StmtIterator iterPositions = modelInput.listStatements(null, RDF.type, egocentricPosition);
@@ -153,8 +153,8 @@ public class Main {
             int crsCode = crs.getProperty(hasEPSGcode).getInt();
             double[] referenceCoordinates = new double[2];
             Literal[] coordinateLiterals = new Literal[2];
-            referenceCoordinates[0] = referencePosition.getProperty(hasCoordinate48).getInt();
-            referenceCoordinates[1] = referencePosition.getProperty(hasCoordinate47).getInt();
+            referenceCoordinates[0] = referencePosition.getProperty(hasCoordinate1).getInt();
+            referenceCoordinates[1] = referencePosition.getProperty(hasCoordinate2).getInt();
             double direction = oldPosition.getProperty(hasDirectionInGradians).getInt();
             double distance = oldPosition.getProperty(hasDistanceInMeters).getDouble();
 
@@ -164,21 +164,21 @@ public class Main {
             coordinateLiterals[1] = modelTemp.createTypedLiteral(Double.toString(newCoordinates[1]),
                     XSDDatatype.XSDdecimal);
 
-            Resource coordinate48 = modelTemp.createResource(IRI.COORDINATE_NAMESPACE + "48-" + newCoordinates[0]);
-            coordinate48.addProperty(hasValue, coordinateLiterals[0]);
-            coordinate48.addProperty(hasUnit, unitMeters);
-            coordinate48.addProperty(hasAxis, axis48);
-            Resource coordinate47 = modelTemp.createResource(IRI.COORDINATE_NAMESPACE + "47-" + newCoordinates[1]);
-            coordinate47.addProperty(hasValue, coordinateLiterals[1]);
-            coordinate47.addProperty(hasUnit, unitMeters);
-            coordinate47.addProperty(hasAxis, axis47);
+            Resource coordinate1 = modelTemp.createResource(IRI.COORDINATE_NAMESPACE + "1-" + newCoordinates[0]);
+            coordinate1.addProperty(hasValue, coordinateLiterals[0]);
+            coordinate1.addProperty(hasUnit, unitMeters);
+            coordinate1.addProperty(hasAxis, axis1);
+            Resource coordinate2 = modelTemp.createResource(IRI.COORDINATE_NAMESPACE + "2-" + newCoordinates[1]);
+            coordinate2.addProperty(hasValue, coordinateLiterals[1]);
+            coordinate2.addProperty(hasUnit, unitMeters);
+            coordinate2.addProperty(hasAxis, axis2);
 
             Resource newPosition = modelTemp.createResource(oldPosition.getURI() + "-" + crsCode);
             newPosition.addProperty(hasCRS, crs);
-            newPosition.addProperty(hasCoordinate, coordinate48);
-            newPosition.addProperty(hasCoordinate, coordinate47);
-            newPosition.addProperty(hasCoordinate48, coordinateLiterals[0]);
-            newPosition.addProperty(hasCoordinate47, coordinateLiterals[1]);
+            newPosition.addProperty(hasCoordinate, coordinate1);
+            newPosition.addProperty(hasCoordinate, coordinate2);
+            newPosition.addProperty(hasCoordinate1, coordinateLiterals[0]);
+            newPosition.addProperty(hasCoordinate2, coordinateLiterals[1]);
 
             // Add the position to the spatial entity
             StmtIterator iterSpatialEntities = modelInput.listStatements(null, hasPosition, oldPosition);
@@ -212,10 +212,10 @@ public class Main {
         Property hasUnit = modelInput.getProperty(IRI.HAS_UNIT);
         Resource unitDegrees = modelTemp.createResource(IRI.UNIT_DEGREES);
         Property hasAxis = modelInput.getProperty(IRI.HAS_AXIS);
-        Property hasCoordinate1 = modelTemp.createProperty(IRI.HAS_COORDINATE_1);
-        Property hasCoordinate2 = modelTemp.createProperty(IRI.HAS_COORDINATE_2);
-        Resource axis1 = modelTemp.createResource(IRI.AXIS_1);
-        Resource axis2 = modelTemp.createResource(IRI.AXIS_2);
+        Property hasCoordinate106 = modelTemp.createProperty(IRI.HAS_COORDINATE_106);
+        Property hasCoordinate107 = modelTemp.createProperty(IRI.HAS_COORDINATE_107);
+        Resource axis106 = modelTemp.createResource(IRI.AXIS_106);
+        Resource axis107 = modelTemp.createResource(IRI.AXIS_107);
 
         StmtIterator iterPositions = modelInput.listStatements(null, hasCRS, (RDFNode) null);
         iterPositions.forEachRemaining(statementHasCRS -> {
@@ -234,10 +234,10 @@ public class Main {
                     double oldCoordinateValue = oldCoordinate.getProperty(hasValue).getObject().asLiteral().getDouble();
                     Resource oldAxis = oldCoordinate.getProperty(hasAxis).getObject().asResource();
                     switch (oldAxis.getURI()) {
-                    case IRI.AXIS_48:
+                    case IRI.AXIS_1:
                         oldCoordinates[0] = oldCoordinateValue;
                         break;
-                    case IRI.AXIS_47:
+                    case IRI.AXIS_2:
                         oldCoordinates[1] = oldCoordinateValue;
                         break;
                     default:
@@ -257,22 +257,22 @@ public class Main {
                     ptDst = operation.getMathTransform().transform(ptSrc, null);
                     newCoordinates[0] = Math.round(ptDst.getCoordinate()[0] * 1000000) / 1000000.0;
                     newCoordinates[1] = Math.round(ptDst.getCoordinate()[1] * 1000000) / 1000000.0;
-                    Resource coordinate1 = modelTemp.createResource(IRI.IFN_DATA + "coordinate/1-" + newCoordinates[0]);
-                    Resource coordinate2 = modelTemp.createResource(IRI.IFN_DATA + "coordinate/2-" + newCoordinates[1]);
-                    newPosition.addProperty(hasCoordinate, coordinate1);
-                    newPosition.addProperty(hasCoordinate, coordinate2);
+                    Resource coordinate106 = modelTemp.createResource(IRI.IFN_DATA + "coordinate/106-" + newCoordinates[0]);
+                    Resource coordinate107 = modelTemp.createResource(IRI.IFN_DATA + "coordinate/107-" + newCoordinates[1]);
+                    newPosition.addProperty(hasCoordinate, coordinate106);
+                    newPosition.addProperty(hasCoordinate, coordinate107);
                     coordinateLiterals[0] = modelTemp.createTypedLiteral(Double.toString(newCoordinates[0]),
                             XSDDatatype.XSDdecimal);
                     coordinateLiterals[1] = modelTemp.createTypedLiteral(Double.toString(newCoordinates[1]),
                             XSDDatatype.XSDdecimal);
-                    newPosition.addProperty(hasCoordinate1, coordinateLiterals[0]);
-                    newPosition.addProperty(hasCoordinate2, coordinateLiterals[1]);
-                    coordinate1.addProperty(hasValue, coordinateLiterals[0]);
-                    coordinate1.addProperty(hasUnit, unitDegrees);
-                    coordinate1.addProperty(hasAxis, axis1);
-                    coordinate2.addProperty(hasValue, coordinateLiterals[1]);
-                    coordinate2.addProperty(hasUnit, unitDegrees);
-                    coordinate2.addProperty(hasAxis, axis2);
+                    newPosition.addProperty(hasCoordinate106, coordinateLiterals[0]);
+                    newPosition.addProperty(hasCoordinate107, coordinateLiterals[1]);
+                    coordinate106.addProperty(hasValue, coordinateLiterals[0]);
+                    coordinate106.addProperty(hasUnit, unitDegrees);
+                    coordinate106.addProperty(hasAxis, axis106);
+                    coordinate107.addProperty(hasValue, coordinateLiterals[1]);
+                    coordinate107.addProperty(hasUnit, unitDegrees);
+                    coordinate107.addProperty(hasAxis, axis107);
                 } catch (FactoryException | MismatchedDimensionException | TransformException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
